@@ -1,8 +1,11 @@
 import os
-
+import pyodbc
+import urllib
+connect_string = f"Driver={{{pyodbc.drivers()[-1]}}};Server=tcp:{os.environ.get('DB_SERVER_NAME')},1433;Database={os.environ.get('DATABASE_NAME')};Uid={os.environ.get('DATABASE_USER')};Pwd={os.environ.get('DATABASE_PASSWORD')};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
+url_encoded_connect_string = urllib.parse.quote_plus(connect_string)
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = f"mssql+pyodbc://{os.environ.get('DATABASE_URL')}?driver=ODBC Driver 17 for SQL Server?trusted_connection=yes"
+    SQLALCHEMY_DATABASE_URI = f"mssql+pyodbc:///?odbc_connect={url_encoded_connect_string}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SCHEDULED_JOB_INTERVAL_SECONDS = int(os.environ.get('SCHEDULED_JOB_INTERVAL_SECONDS'))
     FINANCE_PACKAGE_URL = os.environ.get('FINANCE_PACKAGE_URL')

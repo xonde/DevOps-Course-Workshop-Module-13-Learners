@@ -1,5 +1,5 @@
 # Use official Python base image
-FROM python:3.7-slim-stretch as base
+FROM python:3.9-buster as base
 
 ENV APP_INSTALL=/app
 ENV PYTHONPATH=${APP_INSTALL}
