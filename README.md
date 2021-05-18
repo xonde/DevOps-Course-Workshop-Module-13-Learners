@@ -56,7 +56,7 @@ You can add more logging for relevant information as above.
 It might also be useful to look at the database.
 You can find the details under 'Configuration' for the App Service in the Azure Portal.
 
-Ultimately like so many bugs, investigating is what takes time, the actually fix should just be a single line change.
+Ultimately like so many bugs, investigating is what takes time - the actual fix should just be a single line change.
 Having deployed the fix the order that was stuck should be processed, and refreshing the home page of the app should show the queue go down as the orders are gradually processed.
 
 > Note: The next parts assume you leave in the logging added above, so don't remove it when you have fixed the problem.
@@ -65,33 +65,28 @@ Having deployed the fix the order that was stuck should be processed, and refres
 
 You've solved the immediate issue, but there are still some fundamental problems:
 
-* It's still the case that if something goes wrong with an order all orders will stop
+* Even when a problem is known the log stream in Azure is quite bad.
 * No one will be notified until customers start complaining.
-* Even when a problem is known the log stream is Azure is quite bad.
+* It's still the case that if something goes wrong with an order all orders will stop.
 
 We need to improve this:
 
-* We should use a tool such as Azure Application Insights (App Insights) to get a better view of the logs
-* We should set up alerts for when something goes wrong
+* We should use a tool such as Azure Application Insights (App Insights) to get a better view of the logs.
+* We should set up alerts for when something goes wrong.
 * Once we have visibility of orders that have failed, perhaps we should move on from them rather than endlessly failing.
 
 ## Add App Insights
 
 Within your resource group create a new Application Insights resource.
 
-You'll need to install App Insights by adding `applicationinsights` to requirements.txt and the following to `app.py`:
+To actually send logs to Application Insights you'll need to add the Python package [opencensus-ext-azure](https://pypi.org/project/opencensus-ext-azure/) to requirements.txt.
 
-```python
-from applicationinsights.flask.ext import AppInsights
-appinsights = AppInsights(app)
-```
+Then follow the instructions on that page to add an `AzureLogHandler` to your logger. You should be adding this setup to `app.py`. You can find the "instrumentation key" in the Azure portal, on the overview page of your Application Insights resource.
 
-In order to actually connect you'll need to configure it too.
-Add `APPINSIGHTS_INSTRUMENTATIONKEY` to `flask_config.py`.
-You can find the value this needs to be within the App Insights resource in the Azure Portal, and set that value under 'Configuration' on the App Service.
+Rather than hardcoding the connection string in the Python code, configure it more securely by using an environment variable called `APPLICATIONINSIGHTS_CONNECTION_STRING`. Set this on the 'Configuration' page of the App Service.
 
-A few minutes after deploying this (App Insights batches up log messages) you can see the logs.
-Go the App Insights resource and then chose logs.
+A few minutes after deploying your changes (App Insights batches up log messages) you can see the logs.
+Go the App Insights resource and then navigate to `Logs`.
 The query `traces` should show up all the logging you added in the previous part.
 You can also search it with queries like:
 
@@ -112,7 +107,7 @@ await fetch("/new", {
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
-    product: "ToDo App PRO",
+    product: "TodoApp PRO",
     customer: "Me",
     date_placed: "3000-01-01T12:00:00Z"
 })})
@@ -130,7 +125,7 @@ Exceptions don't automatically appear in App Insights like they did in the log s
 app.logger.exception("Error processing order {id}".format(id = order.id))
 ```
 
-After deploying this you'll see results when you run the query `exceptions`
+After deploying this you'll see results when you run the query `exceptions`.
 The details of the exception are magically picked up by the logger.
 Click "New Alert rule" to setup the rule.
 
