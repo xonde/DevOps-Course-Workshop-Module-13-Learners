@@ -79,11 +79,15 @@ We need to improve this:
 
 Within your resource group create a new Application Insights resource.
 
+> Search for "Application Insights" in the top search bar in the portal, select Create, and then select the correct resource group and change the "Resource Mode" to "Classic"
+
 To actually send logs to Application Insights you'll need to add the Python package [opencensus-ext-azure](https://pypi.org/project/opencensus-ext-azure/) to requirements.txt.
 
 Then follow the instructions on that page to add an `AzureLogHandler` to your logger. You should be adding this setup to `app.py`. You can find the "instrumentation key" in the Azure portal, on the overview page of your Application Insights resource.
 
 Rather than hardcoding the connection string in the Python code, configure it more securely by using an environment variable called `APPLICATIONINSIGHTS_CONNECTION_STRING`. Set this on the 'Configuration' page of the App Service.
+
+> The environment variable gets picked up automatically so your code doesn't need to pass anything into `AzureLogHandler()`. Make sure to include `InstrumentationKey=` in your connection string variable.
 
 A few minutes after deploying your changes (App Insights batches up log messages) you can see the logs.
 Go the App Insights resource and then navigate to `Logs`.
