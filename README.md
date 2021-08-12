@@ -83,7 +83,7 @@ Within your resource group create a new Application Insights resource.
 
 To actually send logs to Application Insights you'll need to add the Python packages opencensus-ext-azure and opencensus-ext-flask to requirements.txt.
 
-Then follow the instructions on that page to add an `AzureLogHandler` to your logger. You should be adding this setup to `app.py`. You can find the "instrumentation key" in the Azure portal, on the overview page of your Application Insights resource.
+Then follow the instructions on [this page](https://pypi.org/project/opencensus-ext-azure/) to add an `AzureLogHandler` to your logger. You should be adding this setup to `app.py`. You can find the "instrumentation key" in the Azure portal, on the overview page of your Application Insights resource.
 
 You can find the "instrumentation key" in the Azure portal, on the overview page of your Application Insights resource. Rather than hardcoding the connection string in the Python code, configure it more securely by using an environment variable called `APPLICATIONINSIGHTS_CONNECTION_STRING`. Set this on the 'Configuration' page of the App Service.
 
