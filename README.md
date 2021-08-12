@@ -8,7 +8,7 @@ We need to investigate why.
 
 Back on the App Service in the Azure Portal click on Log stream and you'll see a number of errors like:
 
-```
+```text
 requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://XXX-order-processing-finance-package.azurewebsites.net/ProcessPayment
 ```
 
@@ -94,7 +94,7 @@ Go the App Insights resource and then navigate to `Logs`.
 The query `traces` should show up all the logging you added in the previous part. All requests to your Flask application should also be getting recorded.
 You can also search it with queries like:
 
-```
+```text
 traces | where message contains "Response from endpoint"
 ```
 
@@ -167,9 +167,10 @@ If we retry them it might work.
 You need to determine how to recognize such a transient error and stop the app from giving up on such orders, whilst still failing on permanent errors like the one we introduced above.
 
 Having deployed that change, lets reconsider the alerts.
-- If an order has failed we always want to send an alert.
-- Occasionally having to retry shouldn't trigger and email
-- All orders failing even if we are to retry should trigger and email
+
+* If an order has failed we always want to send an alert.
+* Occasionally having to retry shouldn't trigger and email
+* All orders failing even if we are to retry should trigger and email
 
 Change the alerts to fulfil these requirements.
 
@@ -190,10 +191,14 @@ This system processes orders at a fixed rate (if there are any to be processed o
 As you can see if that rate is exceeded the queue will build up.
 This isn't an exception so won't be caught above but is something to monitor.
 
-App Insights already has the data needed to monitor this.
-Try the following query:
+We will do this by monitoring the number of requests coming in to create new orders. For that we'll need to add Flask middleware to record requests to App Insights.
+Add the `opencensus-ext-flask` package to your `requirements.txt` and add the middleware to `app.py` by adapting this sample code: <https://docs.microsoft.com/en-us/azure/azure-monitor/app/opencensus-python-request#tracking-flask-applications>.
 
-```
+Once you have redeployed your app and given Azure a few minutes to pull the logs through you can run the query "requests" in Application Insights Logs too see all requests made to your application.
+
+We are interested in the number of requests to `/new`. Try the following query:
+
+```text
 requests 
 | where name == '/new' and success == 'True' 
 | project Kind="new", timestamp
@@ -217,7 +222,7 @@ You can set an alert for when the queue is growing.
 Prior to increasing the load you'll likely see 10 minute periods where the queue increased or decreased by one or so, so you'll want to set a slightly higher threshold than that.
 You'll need to set the alert logic to based on metric measurement and change the summarize line to something like:
 
-```
+```text
 | summarize AggregatedValue= count(Kind == "new") -  count(Kind == "processed") by bin(timestamp,  5m)
 ```
 
