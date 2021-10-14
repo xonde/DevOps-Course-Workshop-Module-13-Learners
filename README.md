@@ -91,7 +91,7 @@ You can find the "instrumentation key" in the Azure portal, on the overview page
 
 A few minutes after deploying your changes (App Insights batches up log messages) you can see the logs.
 Go the App Insights resource and then navigate to `Logs`.
-The query `traces` should show up all the logging you added in the previous part. All requests to your Flask application should also be getting recorded.
+The query `traces` should show up all the logging you added in the previous part. See the "Stretch: Monitoring load" for how to to integrate with Flask and start logging all incoming requests.
 You can also search it with queries like:
 
 ```text
