@@ -41,8 +41,7 @@ logging.basicConfig(level=logging.INFO)
 For the purpose of this workshop it is fine to directly push changes to the app.
 In a real setting you are likely to need to push changes to Git and get your CI/CD server to do a release.
 
-In the root of the project run `az login` then `az webapp up -n {App Service name} && az webapp restart`.
-webapp name is name of the App Service in the Azure Portal, which is also the first part of the web address (e.g. `XXX-order-processing`)
+In the root of the project run `az login` then `az webapp up -n {App Service name} && az webapp restart`. {App Service name} is name of the App Service resource in the Azure Portal, which is also the first part of the web address (e.g. `XXX-order-processing-app-service`)
 This will push your current code to the server and restart it.
 
 Subsequent deploys can be done with just `az webapp up && az webapp restart`, as your login and the App Service name name will be remembered.
