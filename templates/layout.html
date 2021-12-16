@@ -20,6 +20,14 @@
   <body>
     <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
       <a class="navbar-brand" href="/">Products Dashboard</a>
+      <form action="/scenario" method="POST">
+        <select name="scenario" onchange="this.form.submit();this.disabled=true;">
+          <option selected value="">Select a scenario</option>
+          {% for scenario in scenarios %}
+            <option value="{{scenario.value}}">{{scenario.display}}</option>
+          {% endfor %}
+        </select>
+      </form>
     </nav>
 
     <div class="container">

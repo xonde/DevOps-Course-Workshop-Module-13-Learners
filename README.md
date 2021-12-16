@@ -1,6 +1,6 @@
 # Module 13 Workshop
 
-You will have been given access to a resource group in Azure containing a running the Python app from this repo and SQL database.
+You will have been given access to a resource group in Azure containing a running the Python app from this repo and SQL database. Look at your list of resource groups and select the one ending in "order-processing".
 
 Click on the App Service in the Azure portal and then the URL.
 You'll see a dashboard showing one successfully processed order and a queue of orders to be processed, but no further orders are being processed.
@@ -50,9 +50,9 @@ Subsequent deploys can be done with just `az webapp up && az webapp restart`, as
 
 The log stream should now contain the response from the finance package.
 This still isn't quite enough information to fix the problem.
-You can add more logging for relevant information as above.
+Add more logging for relevant information as above.
 
-It might also be useful to look at the database.
+If you need to, you can look at the database, but note that in real world scenarios you often do not have access to this.
 You can find the details under 'Configuration' for the App Service in the Azure Portal.
 
 Ultimately like so many bugs, investigating is what takes time - the actual fix should just be a single line change.
@@ -80,19 +80,19 @@ Within your resource group create a new Application Insights resource.
 
 > Search for "Application Insights" in the top search bar in the portal, select Create, and then select the correct resource group and change the "Resource Mode" to "Classic"
 
-To actually send logs to Application Insights you'll need to add the Python packages opencensus-ext-azure and opencensus-ext-flask to requirements.txt.
+To actually send logs to Application Insights you'll need to add the Python packages `opencensus-ext-azure` and `opencensus-ext-flask` to requirements.txt.
 
-Then follow the instructions on [this page](https://pypi.org/project/opencensus-ext-azure/) to add an `AzureLogHandler` to your logger. You should be adding this setup to `app.py`. You can find the "instrumentation key" in the Azure portal, on the overview page of your Application Insights resource.
+Next, add the middleware to `app.py` by adapting this sample code: <https://docs.microsoft.com/en-us/azure/azure-monitor/app/opencensus-python-request#tracking-flask-applications>.
 
-You can find the "instrumentation key" in the Azure portal, on the overview page of your Application Insights resource. Rather than hardcoding the connection string in the Python code, configure it more securely by using an environment variable called `APPLICATIONINSIGHTS_CONNECTION_STRING`. Set this on the 'Configuration' page of the App Service.
+You can find the connection string with an "instrumentation key" in the Azure portal, on the overview page of your Application Insights resource. Rather than hardcoding the connection string in the Python code, configure it securely by using an environment variable called `APPLICATIONINSIGHTS_CONNECTION_STRING`. Set this on the 'Configuration' page of the App Service.
 
-> The environment variable gets picked up automatically so your code doesn't need to pass anything into `AzureLogHandler()`. Just make sure to include `InstrumentationKey=` in the environment variable's value!
+> The environment variable gets picked up automatically so your code doesn't need to pass anything into `AzureLogHandler()`. Just make sure the value is the whole connection string, including `InstrumentationKey=`!
 
 A few minutes after deploying your changes (App Insights batches up log messages) you can see the logs.
 Go the App Insights resource and then navigate to `Logs`.
-The query `traces` should show up all the logging you added in the previous part. See the "Stretch: Monitoring load" for how to to integrate with Flask and start logging all incoming requests.
-You can also search it with queries like:
+The query `traces` should show up all the logging you added in the previous part, while `requests` will show you all requests handled by your Flask app.
 
+You can also search it with queries (in the Kusto query language or "KQL"):
 ```text
 traces | where message contains "Response from endpoint"
 ```
@@ -101,20 +101,8 @@ traces | where message contains "Response from endpoint"
 
 The second step we wanted to take was to send out alerts when something goes wrong.
 We've fixed the problem though, so to start lets add a broken order.
-Run the following on the browser console on the app's dashboard:
 
-```javascript
-await fetch("/new", {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    product: "TodoApp PRO",
-    customer: "Me",
-    date_placed: "3000-01-01T12:00:00Z"
-})})
-```
+Select "Add broken order" from the dropdown at the top of the page.
 
 This order from the year 3000 will fail as it isn't in the past.
 It won't actually block new orders as it'll be after them in the queue.
@@ -150,14 +138,7 @@ Also update the dashboard to mark these failed orders in red.
 
 ## Stretch: Queue reliability
 
-To start this stretch scenario run the following in the console on the app's dashboard:
-
-```javascript
- await fetch("/scenario", {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({scenario: "UnreliableProcessing"})})
- ```
+To start this stretch scenario, select "Queue Reliability" from the scenario dropdown at the top of the orders dashboard.
 
 After triggering this scenario you should notice a number of orders failing.
 It seems that the Finance Package has become quite unreliable and is failing orders at random.
@@ -165,7 +146,7 @@ If we retry them it might work.
 
 You need to determine how to recognize such a transient error and stop the app from giving up on such orders, whilst still failing on permanent errors like the one we introduced above.
 
-Having deployed that change, lets reconsider the alerts.
+Having deployed that change, let's reconsider the alerts.
 
 * If an order has failed we always want to send an alert.
 * Occasionally having to retry shouldn't trigger and email
@@ -175,25 +156,16 @@ Change the alerts to fulfil these requirements.
 
 ## Stretch: Monitoring load
 
-To start this stretch scenario run the following in the console on the app's dashboard:
-
-```javascript
- await fetch("/scenario", {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({scenario: "HighLoad"})})
- ```
+To start this stretch scenario, select "Monitoring Load" from the scenario dropdown at the top of the dashboard.
 
 > Note this exercise is to monitor the situation, don't try to fix it as when peak load as passed the queue will be processed.
 
 This system processes orders at a fixed rate (if there are any to be processed of course).
-As you can see if that rate is exceeded the queue will build up.
+As you can see, if that rate is exceeded the queue will build up. 
 This isn't an exception so won't be caught above but is something to monitor.
+We will do this by monitoring the number of requests coming in to create new orders.
 
-We will do this by monitoring the number of requests coming in to create new orders. For that we'll need to add Flask middleware to record requests to App Insights.
-Add the `opencensus-ext-flask` package to your `requirements.txt` and add the middleware to `app.py` by adapting this sample code: <https://docs.microsoft.com/en-us/azure/azure-monitor/app/opencensus-python-request#tracking-flask-applications>.
-
-Once you have redeployed your app and given Azure a few minutes to pull the logs through you can run the query "requests" in Application Insights Logs too see all requests made to your application.
+Since you set up the Flask middleware, all requests to your Flask app are being logged to Application Insights. You can run the query "requests" in Application Insights Logs too see all requests made to your application.
 
 We are interested in the number of requests to `/new`. Try the following query:
 
@@ -225,16 +197,9 @@ You'll need to set the alert logic to based on metric measurement and change the
 | summarize AggregatedValue= count(Kind == "new") -  count(Kind == "processed") by bin(timestamp,  5m)
 ```
 
-## Stretch: system monitoring
+## Stretch: System monitoring
 
-To start this stretch scenario run the following in the console on the app's dashboard:
-
-```javascript
- await fetch("/scenario", {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({scenario: "VeryHighLoad"})})
- ```
+To start this stretch scenario, select "System Monitoring" from the scenario dropdown at the top of the orders dashboard.
 
 If the load ramps up much more this will actually overwhelm the system.
 
