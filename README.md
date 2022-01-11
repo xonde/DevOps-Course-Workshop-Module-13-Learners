@@ -51,11 +51,26 @@ Subsequent deploys can be done with just `az webapp up && az webapp restart`, as
 The log stream should now contain the response from the finance package.
 This still isn't quite enough information to fix the problem.
 Add more logging for relevant information as above.
+You could look at the database, but you shouldn't need to. In real world scenarios you would often not have access to the live database.
 
-If you need to, you can look at the database, but note that in real world scenarios you often do not have access to this.
-You can find the details under 'Configuration' for the App Service in the Azure Portal.
+<details><summary>Hint</summary>
 
-Ultimately like so many bugs, investigating is what takes time - the actual fix should just be a single line change.
+When logging outgoing API requests, you probably want to log what request you're making - in this case the most important info is in the `payload` dictionary).
+  
+Make sure you read the whole date string from your logged message. The part at the end is a timezone.
+
+</details>
+
+Once you see what the problem is, try fixing it. Ultimately like so many bugs, investigating is what takes time - the actual fix should just be a single line change.
+
+<details><summary>Hint</summary>
+
+If you look in the `order.py` file, orders have a property called `date_placed_local` that should do what you want - convert from the +10 timezone to local. You simply need to use `date_placed_local` instead of `date_placed` when creating the payload.
+
+> If you're not doing this workshop during BST, maybe you assumed you want UTC. That would be reasonable but the Finance API does in fact want "local".
+  
+</details>
+
 Having deployed the fix the order that was stuck should be processed, and refreshing the home page of the app should show the queue go down as the orders are gradually processed.
 
 > Note: The next parts assume you leave in the logging added above, so don't remove it when you have fixed the problem.
