@@ -154,7 +154,7 @@ You probably don't want this.
 Now we have alerts in place perhaps rather than endlessly retrying we should give up on orders that error and move on to the next one.
 
 You'll need to make it so when errors are thrown the order is somehow marked as failed, and not to be picked for processing anymore.
-Also update the dashboard to mark these failed orders in red.
+If you like, you could even update the HTML to mark these failed orders in red.
 
 ## Stretch: Queue reliability
 
