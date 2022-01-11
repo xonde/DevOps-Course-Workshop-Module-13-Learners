@@ -95,13 +95,16 @@ Within your resource group create a new Application Insights resource.
 
 > Search for "Application Insights" in the top search bar in the portal, select Create, and then select the correct resource group and change the "Resource Mode" to "Classic"
 
+Find the connection string (containing a sensitive "instrumentation key") on the overview page of your Application Insights resource. Rather than hardcoding the connection string in the Python code, configure it securely by using an environment variable called `APPLICATIONINSIGHTS_CONNECTION_STRING`. Set this on the 'Configuration' page of the App Service.
+
 To actually send logs to Application Insights you'll need to add the Python packages `opencensus-ext-azure` and `opencensus-ext-flask` to requirements.txt.
 
-Next, add the middleware to `app.py` by adapting this sample code: <https://docs.microsoft.com/en-us/azure/azure-monitor/app/opencensus-python-request#tracking-flask-applications>.
+Next, add the middleware to `app.py` by adapting this sample code: <https://docs.microsoft.com/en-us/azure/azure-monitor/app/opencensus-python-request#tracking-flask-applications>. That middleware will log all requests to your Flask app (like every time you view the webpage) and the `AzureExporter` will send those logs to Application Insights.
 
-You can find the connection string with an "instrumentation key" in the Azure portal, on the overview page of your Application Insights resource. Rather than hardcoding the connection string in the Python code, configure it securely by using an environment variable called `APPLICATIONINSIGHTS_CONNECTION_STRING`. Set this on the 'Configuration' page of the App Service.
+> The environment variable gets picked up automatically so your code doesn't need to pass anything into `AzureExporter()`. Just make sure the value is the whole connection string, including `InstrumentationKey=`!
 
-> The environment variable gets picked up automatically so your code doesn't need to pass anything into `AzureLogHandler()`. Just make sure the value is the whole connection string, including `InstrumentationKey=`!
+Finally, to send `logger.info` messages there too, register a "log handler".
+[Visit this page](https://docs.microsoft.com/en-us/azure/azure-monitor/app/opencensus-python) and look for the sample code for setting up `AzureLogHandler`. Take the first few lines that add a handler to `logger`, and put them at the top of your `app.py`. As before, remove the `connection_string=...` argument from `AzureLogHandler()` because it will pick up the environment variable automatically.
 
 A few minutes after deploying your changes (App Insights batches up log messages) you can see the logs.
 Go the App Insights resource and then navigate to `Logs`.
