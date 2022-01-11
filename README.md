@@ -97,6 +97,8 @@ Within your resource group create a new Application Insights resource.
 
 Find the connection string (containing a sensitive "instrumentation key") on the overview page of your Application Insights resource. Rather than hardcoding the connection string in the Python code, configure it securely by using an environment variable called `APPLICATIONINSIGHTS_CONNECTION_STRING`. Set this on the 'Configuration' page of the App Service.
 
+> Don't forget to click the `Save` button at the top of the Configuration page after making changes!
+
 To actually send logs to Application Insights you'll need to add the Python packages `opencensus-ext-azure` and `opencensus-ext-flask` to requirements.txt.
 
 Next, add the middleware to `app.py` by adapting this sample code: <https://docs.microsoft.com/en-us/azure/azure-monitor/app/opencensus-python-request#tracking-flask-applications>. That middleware will log all requests to your Flask app (like every time you view the webpage) and the `AzureExporter` will send those logs to Application Insights.
