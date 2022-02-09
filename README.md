@@ -14,11 +14,17 @@ requests.exceptions.HTTPError: 400 Client Error: Bad Request for url: https://XX
 
 Sadly this order-processing-finance-package is a third party tool, so we'll need to investigate this issue from our end, and see if we can fix it, or if the problem needs to be raised with the supplier.
 
-Have a look at the source code and identify where the error is thrown.
-There is no obvious cause to this issue, but you can see that the system picks up the oldest unprocessed order and tries to process it, here an error is happening, so the order remains unprocessed and will be retired endlessly, so later orders remain unprocessed.
+The logstream includes a stack trace - the files and line numbers of what was being executed when the error occurred. Some of the stack trace will point to other packages' code, like the `requests` library, but one line of the stack trace points to your application code. Have a look at the source code and identify the line where the error is thrown.
 
-We don't have enough information to work out whats going wrong.
-We need more logging.
+<details><summary>Hint</summary>
+
+In the middle of the stack trace you should see it mention "scheduled_jobs.py", line 37.
+
+</details>
+
+There is no obvious cause to this issue, but you can see that the system picks up the oldest unprocessed order and tries to process it. It makes a request to a "finance package" web API but if an error response is received then the job aborts. So the order remains unprocessed and will be retried endlessly, and later orders remain unprocessed.
+
+We don't have enough information to work out whats going wrong. We need more logging.
 
 ## Adding more logging to the app
 
@@ -27,6 +33,12 @@ We can add more logging with a line like the following:
 ```python
 app.logger.info("Response from endpoint: " + response.text)
 ```
+
+<details><summary>Hint:</summary>
+
+This needs to go after the response variable is defined, but before the error is raised. Nothing will get executed after the error is raised. 
+
+</details> 
 
 If you deploy the code now, this won't actually add anything to the log stream as sadly the default logging level doesn't include `info`.
 Add the following to `app.py`
@@ -48,16 +60,16 @@ Subsequent deploys can be done with just `az webapp up && az webapp restart`, as
 
 ## Investigate and fix
 
-The log stream should now contain the response from the finance package.
+The log stream should now contain the response from the finance package - look for a line containing "Response from endpoint".
 This still isn't quite enough information to fix the problem.
 Add more logging for relevant information as above.
 You could look at the database, but you shouldn't need to. In real world scenarios you would often not have access to the live database.
 
 <details><summary>Hint</summary>
 
-When logging outgoing API requests, you probably want to log what request you're making - in this case the most important info is in the `payload` dictionary).
+When logging outgoing API requests, you probably want to log what request you're making - in this case the most important info is the date in the `payload` dictionary).
   
-Make sure you read the whole date string from your logged message. The part at the end is a timezone.
+Look at the whole date string from your logged message. The part at the end is a timezone.
 
 </details>
 
@@ -191,7 +203,7 @@ We are interested in the number of requests to `/new`. Try the following query:
 
 ```text
 requests 
-| where name == '/new' and success == 'True' 
+| where name == 'POST /new' and success == 'True' 
 | project Kind="new", timestamp
 | summarize new = count(Kind == "new") by bin(timestamp, 10m)
 ```
