@@ -1,5 +1,5 @@
 python-dotenv==0.14.0
-flask==1.1.2
+flask==2.0.3
 requests==2.25.1
 flask-sqlalchemy>=2.5.1
 pyodbc>=4.0.30
