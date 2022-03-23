@@ -117,8 +117,11 @@ Next, add the middleware to `app.py` by adapting this sample code: <https://docs
 
 > The environment variable gets picked up automatically so your code doesn't need to pass anything into `AzureExporter()`. Just make sure the value is the whole connection string, including `InstrumentationKey=`!
 
-Finally, to send `logger.info` messages there too, register a "log handler".
-[Visit this page](https://docs.microsoft.com/en-us/azure/azure-monitor/app/opencensus-python) and look for the sample code for setting up `AzureLogHandler`. Take the first few lines that add a handler to `logger`, and put them at the top of your `app.py`. As before, remove the `connection_string=...` argument from `AzureLogHandler()` because it will pick up the environment variable automatically.
+Finally, to send `logger.info` messages there too, register a "log handler". Import `AzureLogHandler` from `opencensus.ext.azure.log_exporter`, then add it as a handler for our Flask app logs:
+
+```python
+app.logger.addHandler(AzureLogHandler())
+```
 
 A few minutes after deploying your changes (App Insights batches up log messages) you can see the logs.
 Go the App Insights resource and then navigate to `Logs`.
