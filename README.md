@@ -115,7 +115,7 @@ To actually send logs to Application Insights you'll need to add the Python pack
 
 Next, add the middleware to `app.py` by adapting this sample code: <https://docs.microsoft.com/en-us/azure/azure-monitor/app/opencensus-python-request#tracking-flask-applications>. That middleware will log all requests to your Flask app (like every time you view the webpage) and the `AzureExporter` will send those logs to Application Insights.
 
-> The environment variable gets picked up automatically so your code doesn't need to pass anything into `AzureExporter()`. Just make sure the value is the whole connection string, including `InstrumentationKey=`!
+> The environment variable gets picked up automatically so your code doesn't need to pass anything into `AzureExporter()`. Just make sure the application setting in Azure is the whole connection string, including `InstrumentationKey=`!
 
 Finally, to send `logger.info` messages there too, register a "log handler". Import `AzureLogHandler` from `opencensus.ext.azure.log_exporter`, then add it as a handler for our Flask app logs:
 
@@ -137,7 +137,7 @@ traces | where message contains "Response from endpoint"
 The second step we wanted to take was to send out alerts when something goes wrong.
 We've fixed the problem though, so to start lets add a broken order.
 
-Select "Add broken order" from the dropdown at the top of the page.
+Select "Add broken order" from the dropdown at the top of the app service homepage (i.e. the page that lists the orders).
 
 This order from the year 3000 will fail as it isn't in the past.
 It won't actually block new orders as it'll be after them in the queue.
